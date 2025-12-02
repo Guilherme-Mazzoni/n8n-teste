@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIA - Assistente AFFEMG</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #f5f5f5; 
+      --surface: #ffffff; 
+      --elevated: #fafafa; 
+      --border: #e0e0e0;
+      --text: #000000; 
+      --text-secondary: #666666;
+      --primary: #3b82f6; 
+      --primary-hover: #2563eb;
+      --user-bubble: #e3f2fd; 
+      --bot-bubble: #ffffff; 
+      --accent: #3b82f6;
+      --success: #10b981;
+      --error: #ef4444;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      height: 750px;
+      background: var(--surface);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); 
+      border: 1px solid var(--border);
+    }
+
+    /* Top Bar */
+    .top-bar {
+      background: var(--elevated);
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      min-height: 80px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .info h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .info span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .user-menu:hover {
+      background: var(--elevated);
+    }
+
+    .user-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 500;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .guest-badge {
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: var(--elevated);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .btn-login {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-login:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      background: var(--elevated);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    .online {
+      width: 10px;
+      height: 10px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); 
+    }
+
+    /* Messages Area */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      background: var(--bg);
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .messages::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .msg {
+      margin-bottom: 16px;
+      display: flex;
+    }
+
+    .msg.user {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: 70%;
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 15px;
+      line-height: 1.5;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease;
+      position: relative;
+      white-space: pre-wrap; 
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user .bubble {
+      background: var(--user-bubble);
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg.bot .bubble {
+      background: var(--bot-bubble);
+      border: 1px solid var(--border); 
+      border-bottom-left-radius: 4px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .timestamp {
+      display: block;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: right;
+      opacity: 0.7;
+    }
+    .msg.bot .timestamp {
+      text-align: left;
+    }
+
+    .welcome {
+      text-align: center;
+      color: var(--text-secondary);
+      margin-top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+    }
+
+    .info-banner {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .info-banner strong {
+      color: var(--primary);
+    }
+
+    /* Loading/Typing Indicator */
+    .msg.bot.loading .bubble {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      border-left: 3px solid #f97316; 
+      padding: 14px 18px;
+    }
+    .msg.bot.loading .bubble .timestamp {
+        display: none;
+    }
+
+    .msg.bot.loading .bubble span {
+      width: 8px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      opacity: 0.4;
+      animation: bounce 1s infinite;
+    }
+
+    .msg.bot.loading .bubble span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .msg.bot.loading .bubble span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* Input Zone */
+    .input-zone {
+      padding: 16px 24px;
+      background: var(--elevated);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-box {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .text-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 15px;
+      color: var(--text);
+      font-family: inherit;
+      resize: none; 
+      outline: none;
+      transition: all 0.2s;
+      min-height: 48px; 
+      max-height: 120px; 
+      overflow-y: hidden; 
+    }
+
+    .text-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .text-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .send {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+      height: 48px; 
+    }
+
+    .send:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .send:focus { 
+        outline: 3px solid var(--primary);
+        outline-offset: 2px;
+    }
+
+    .send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .send svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    /* Login Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeInOverlay 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeInOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal h3 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .modal p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn-modal {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .skip-login {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .skip-login a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .skip-login a:hover {
+      text-decoration: underline;
+    }
+
+    .error-message {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--error);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .container {
+        height: 100vh;
+        border-radius: 0;
+        max-width: 100%;
+      }
+      body {
+        padding: 0;
+      }
+      .bubble {
+        max-width: 85%;
+      }
+      .top-bar {
+        padding: 16px 20px;
+        min-height: 70px;
+      }
+      .input-zone {
+        padding: 12px 16px;
+      }
+      .user-name {
+        max-width: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <h3>Entrar no SIA</h3>
+      <p>Faça login para salvar seu histórico de conversas</p>
+      
+      <div class="error-message" id="errorMessage"></div>
+      
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Usuário</label>
+          <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+        </div>
+        
+        <div class="modal-actions">
+          <button type="submit" class="btn-modal btn-primary">Entrar</button>
+        </div>
+      </form>
+      
+      <div class="skip-login">
+        <a href="#" id="skipLogin">Continuar sem login</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+    <div class="top-bar">
+      <div class="brand">
+        <div class="avatar">SIA</div>
+        <div class="info">
+          <h2>Assistente AFFEMG</h2>
+          <span>Sistema Inteligente de Atendimento</span>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="online"></div>
+        <div id="userMenuArea"></div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="welcome">Bem-vindo ao Assistente da AFFEMG<br>Como posso ajudá-lo hoje?</div>
+    </div>
+
+    <div class="input-zone">
+      <div class="input-box">
+        <textarea class="text-input" id="userInput" placeholder="Digite sua mensagem..." rows="1"></textarea>
+        <button class="send" id="sendBtn">
+          Enviar
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const loginModal = document.getElementById('loginModal');
+    const loginForm = document.getElementById('loginForm');
+    const skipLogin = document.getElementById('skipLogin');
+    const userMenuArea = document.getElementById('userMenuArea');
+    const errorMessage = document.getElementById('errorMessage');
+
+    const WEBHOOK = "http://192.168.201.110:5678/webhook/sia";
+    
+    // Usuários de demonstração (em produção, usar backend real)
+    const DEMO_USERS = {
+      'admin': { password: 'admin123', name: 'Administrador' },
+      'user': { password: 'user123', name: 'Usuário Teste' }
+    };
+
+    let currentUser = null;
+    let isGuest = false;
+
+    // --- Inicialização ---
+    function init() {
+      checkStoredAuth();
+      if (!currentUser && !isGuest) {
+        showLoginModal();
+      }
+    }
+
+    function checkStoredAuth() {
+      const stored = localStorage.getItem('sia_user');
+      if (stored) {
+        currentUser = JSON.parse(stored);
+        updateUserMenu();
+        loadHistory();
+      }
+    }
+
+    function showLoginModal() {
+      loginModal.classList.add('active');
+      document.getElementById('username').focus();
+    }
+
+    function hideLoginModal() {
+      loginModal.classList.remove('active');
+      errorMessage.classList.remove('show');
+    }
+
+    // --- Autenticação ---
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (DEMO_USERS[username] && DEMO_USERS[username].password === password) {
+        currentUser = {
+          username: username,
+          name: DEMO_USERS[username].name
+        };
+        localStorage.setItem('sia_user', JSON.stringify(currentUser));
+        hideLoginModal();
+        updateUserMenu();
+        loadHistory();
+        showWelcomeMessage();
+      } else {
+        errorMessage.textContent = 'Usuário ou senha incorretos';
+        errorMessage.classList.add('show');
+      }
+    });
+
+    skipLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      isGuest = true;
+      hideLoginModal();
+      updateUserMenu();
+      showGuestBanner();
+    });
+
+    function updateUserMenu() {
+      if (currentUser) {
+        userMenuArea.innerHTML = `
+          <div class="user-menu">
+            <div class="user-icon">${currentUser.name.charAt(0).toUpperCase()}</div>
+            <span class="user-name">${currentUser.name}</span>
+          </div>
+          <button class="btn-logout" onclick="logout()">Sair</button>
+        `;
+      } else if (isGuest) {
+        userMenuArea.innerHTML = `
+          <span class="guest-badge">Modo Visitante</span>
+          <button class="btn-login" onclick="showLoginModal()">Entrar</button>
+        `;
+      }
+    }
+
+    function logout() {
+      if (confirm('Deseja realmente sair? Seu histórico será salvo.')) {
+        currentUser = null;
+        isGuest = false;
+        localStorage.removeItem('sia_user');
+        clearMessages();
+        showLoginModal();
+        updateUserMenu();
+      }
+    }
+
+    function showWelcomeMessage() {
+      const welcome = messagesEl.querySelector('.welcome');
+      if (welcome) welcome.remove();
+      
+      addMessage(`Olá, ${currentUser.name}! Seu histórico foi carregado.`, 'bot');
+    }
+
+    function showGuestBanner() {
+      const welcome = messagesEl.querySelector('.welcome');
+      if (welcome) welcome.remove();
+      
+      const banner = document.createElement('div');
+      banner.className = 'info-banner';
+      banner.innerHTML = `
+        <strong>Modo Visitante</strong><br>
+        Você pode usar o assistente normalmente, mas seu histórico não será salvo.<br>
+        Faça login para salvar suas conversas.
+      `;
+      messagesEl.appendChild(banner);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // --- Histórico ---
+    async function saveMessage(text, type) {
+      if (!currentUser) return;
+
+      try {
+        const history = await window.storage.get(`history:${currentUser.username}`) || { value: '[]' };
+        const messages = JSON.parse(history.value);
+        
+        messages.push({
+          text: text,
+          type: type,
+          timestamp: new Date().toISOString()
+        });
+
+        // Manter apenas últimas 100 mensagens
+        if (messages.length > 100) {
+          messages.shift();
+        }
+
+        await window.storage.set(`history:${currentUser.username}`, JSON.stringify(messages));
+      } catch (error) {
+        console.error('Erro ao salvar histórico:', error);
+      }
+    }
+
+    async function loadHistory() {
+      if (!currentUser) return;
+
+      try {
+        const result = await window.storage.get(`history:${currentUser.username}`);
+        if (result && result.value) {
+          const messages = JSON.parse(result.value);
+          clearMessages();
+          
+          messages.forEach(msg => {
+            addMessage(msg.text, msg.type, false); // false = não salvar novamente
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+      }
+    }
+
+    async function clearHistory() {
+      if (!currentUser) return;
+      
+      if (confirm('Deseja realmente limpar todo o histórico?')) {
+        try {
+          await window.storage.delete(`history:${currentUser.username}`);
+          clearMessages();
+          showWelcomeMessage();
+        } catch (error) {
+          console.error('Erro ao limpar histórico:', error);
+        }
+      }
+    }
+
+    function clearMessages() {
+      messagesEl.innerHTML = '<div class="welcome">Bem-vindo ao Assistente da AFFEMG<br>Como posso ajudá-lo hoje?</div>';
+    }
+
+    // --- Mensagens ---
+    function getTimestamp() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+
+    function addMessage(text, type, save = true) {
+      const welcome = messagesEl.querySelector('.welcome');
+      if (welcome) welcome.remove();
+
+      const banner = messagesEl.querySelector('.info-banner');
+      if (banner) banner.remove();
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg ' + type;
+      
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = text; 
+      
+      const timestamp = document.createElement('span');
+      timestamp.className = 'timestamp';
+      timestamp.textContent = getTimestamp();
+      
+      bubble.appendChild(timestamp); 
+      msgDiv.appendChild(bubble);
+      messagesEl.appendChild(msgDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      if (save) {
+        saveMessage(text, type);
+      }
+    }
+    
+    function addLoadingMessage() {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg bot loading';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = '<span></span><span></span><span></span>'; 
+      
+      msgDiv.appendChild(bubble);
+      messagesEl.appendChild(msgDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return msgDiv;
+    }
+
+    function removeLoadingMessage(loadingEl) {
+      if (loadingEl) {
+        loadingEl.remove();
+      }
+    }
+
+    // --- Auto-resize Textarea ---
+    const MIN_HEIGHT = 48; 
+    const MAX_HEIGHT = 120; 
+
+    function autoResize() {
+      userInput.style.height = 'auto'; 
+      let newHeight = userInput.scrollHeight;
+      
+      if (newHeight < MIN_HEIGHT) {
+        newHeight = MIN_HEIGHT;
+      }
+
+      if (newHeight > MAX_HEIGHT) {
+        userInput.style.overflowY = 'auto';
+        newHeight = MAX_HEIGHT;
+      } else {
+        userInput.style.overflowY = 'hidden';
+      }
+      
+      userInput.style.height = newHeight + 'px';
+      sendBtn.style.height = newHeight > MIN_HEIGHT ? newHeight + 'px' : MIN_HEIGHT + 'px';
+    }
+
+    function resetTextarea() {
+      userInput.value = '';
+      userInput.style.height = MIN_HEIGHT + 'px';
+      sendBtn.style.height = MIN_HEIGHT + 'px';
+      userInput.style.overflowY = 'hidden';
+    }
+
+    userInput.addEventListener('input', autoResize);
+    
+    // --- Envio de Mensagem ---
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      resetTextarea(); 
+      sendBtn.disabled = true;
+
+      const loadingMsg = addLoadingMessage(); 
+
+      try {
+        const response = await fetch(WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensagem: text })
+        });
+        
+        const data = await response.text(); 
+        
+        removeLoadingMessage(loadingMsg);
+        
+        if (!response.ok) {
+          addMessage(`Erro ${response.status}: Falha na comunicação com o servidor.`, 'bot');
+          return; 
+        }
+
+        addMessage(data, 'bot');
+
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        removeLoadingMessage(loadingMsg);
+        addMessage('Erro ao conectar com o servidor. Tente novamente.', 'bot');
+      } finally {
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault(); 
+        sendMessage();
+      }
+    });
+
+    // --- Iniciar ---
+    init();
+    userInput.focus();
+    resetTextarea(); 
+  </script>
+</body>
+</html>
